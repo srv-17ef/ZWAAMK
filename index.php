@@ -38,12 +38,14 @@ foreach ($data as $str) {
         var_dump($sql);
 
         runQuery($sql);
+    } else {
+
+        $newdata[] = $parts;
     }
-    $newdata[] = $parts;
 }
+//seed($newdata);
 
 //var_dump($newdata);
-
 
 function connect()
 {
@@ -67,6 +69,18 @@ function runQuery(string $query)
     return $stmt;
 }
 
+function seed($data)
+{
+    foreach ($data as $datum) {
+        $query = "insert into zwaamk values(";
+        foreach ($datum as $value) {
+            $query .= "'$value'" . ",";
+        }
+        $query = rtrim($query, ",");
+        $query .= ");";
+        runQuery($query);
+    }
+}
 
 ?>
 
