@@ -68,7 +68,7 @@ function seed($data)
         if(!($datum[0] ?? null)) continue;
 
         foreach ($datum as $index => $value) {
-            if ($value === "--.-" || $value === "--" || $value === "---") {
+            if (trim($value," ") === "--.-" || trim($value," ") === "--" || trim($value," ") === "---") {
                 $datum[$index] = "null";
             }
         }
@@ -94,7 +94,7 @@ function seed($data)
         $query .= "), (";
     }
     $query = rtrim($query, ", (");
-    $query .= ");";
+    $query .= ";";
 
     runQuery($query);
 }
