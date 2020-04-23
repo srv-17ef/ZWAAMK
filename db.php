@@ -20,3 +20,17 @@ function runQuery(string $query)
     $stmt->execute();
     return $stmt;
 }
+function fetchAll(string $query)
+{
+    $db = connect();
+    $stmt = $db->prepare($query);
+    $stmt->execute();
+    return $stmt->fetchAll();
+}
+function fetchOne(string $query)
+{
+    $db = connect();
+    $stmt = $db->prepare($query);
+    $stmt->execute();
+    return $stmt->fetch();
+}

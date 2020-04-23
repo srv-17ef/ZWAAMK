@@ -9,6 +9,8 @@
 </head>
 <body>
 <?php
+require("db.php");
+
 $newdata = [];
 $headers = true;
 $csv = array_map('str_getcsv', file('data.csv'));
@@ -35,7 +37,6 @@ foreach ($data as $str) {
         }
         $sql = rtrim($sql, ",");
         $sql .= ');';
-        //var_dump($sql);
 
         runQuery($sql);
     } else {
@@ -45,24 +46,8 @@ foreach ($data as $str) {
 }
 seed($newdata);
 
-//var_dump($newdata);
 
 
-
-function fetchAll(string $query)
-{
-    $db = connect();
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll();
-}
-function fetchOne(string $query)
-{
-    $db = connect();
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    return $stmt->fetch();
-}
 function seed($data)
 {
     $fetchedColumns = fetchAll("SHOW COLUMNS FROM zwaamk");
@@ -81,6 +66,12 @@ function seed($data)
     $query = "insert into zwaamk values (";
     foreach ($data as $datum) {
         if(!($datum[0] ?? null)) continue;
+
+        foreach ($datum as $index => $value) {
+            if ($value === "--.-" || $value === "--" || $value === "---") {
+                $datum[$index] = "null";
+            }
+        }
 
         $i = 0;
         foreach ($columns as $columnName => $columnData) {
@@ -105,8 +96,7 @@ function seed($data)
     $query = rtrim($query, ", (");
     $query .= ");";
 
-    var_dump($query);
-//    runQuery($query);
+    runQuery($query);
 }
 ?>
 
