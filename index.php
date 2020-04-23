@@ -5,10 +5,12 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>ZWAAMK</title>
 </head>
 <body>
 <?php
+require("db.php");
+
 $newdata = [];
 $headers = true;
 $csv = array_map('str_getcsv', file('data.csv'));
@@ -35,7 +37,6 @@ foreach ($data as $str) {
         }
         $sql = rtrim($sql, ",");
         $sql .= ');';
-        var_dump($sql);
 
         runQuery($sql);
     } else {
@@ -43,25 +44,60 @@ foreach ($data as $str) {
         $newdata[] = $parts;
     }
 }
-//seed($newdata);
-
-//var_dump($newdata);
+seed($newdata);
 
 
 
 function seed($data)
 {
+    $fetchedColumns = fetchAll("SHOW COLUMNS FROM zwaamk");
+    $columns = [];
+    $primaryKey = null; $primaryMax = null;
+    foreach ($fetchedColumns as $fetchedColumn)
+    {
+        $columns[$fetchedColumn["Field"]] = $fetchedColumn["Type"];
+        if( $fetchedColumn["Key"] === "PRI")
+        {
+            $primaryKey = $fetchedColumn["Field"];
+            $primaryMax = fetchOne("SELECT MAX($primaryKey) FROM zwaamk");
+            foreach ($primaryMax as $realMax) { $primaryMax = $realMax; }
+        }
+    }
+    $query = "insert into zwaamk values (";
     foreach ($data as $datum) {
-        $query = "insert into zwaamk values(";
-        foreach ($datum as $value) {
-            $query .= "'$value'" . ",";
+        if(!($datum[0] ?? null)) continue;
+
+        foreach ($datum as $index => $value) {
+            if ($value === "--.-" || $value === "--" || $value === "---") {
+                $datum[$index] = "null";
+            }
+        }
+
+        $i = 0;
+        foreach ($columns as $columnName => $columnData) {
+            if($columnName == $primaryKey)
+            {
+                $datum[$i] = strval(intval($datum[$i]) + $primaryMax);
+            }
+
+            $insertThis = $datum[$i];
+            if(!in_array(strtolower(explode('(',$columnData)[0]),["int","integer","float"]))
+            {
+                $insertThis = " '".trim($insertThis," ")."'";
+            }
+
+            $query .= $insertThis . ",";
+
+            $i++;
         }
         $query = rtrim($query, ",");
-        $query .= ");";
-        runQuery($query);
+        $query .= "), (";
     }
-}
+    $query = rtrim($query, ", (");
+    $query .= ");";
 
+    runQuery($query);
+}
 ?>
 
 </body>
